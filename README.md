@@ -1,6 +1,8 @@
 # Surfs Up!
 
-The following in an analysis of one the greatest states, Hawaii! The goal was to explore the climate data and visualize the precipitation and temperature over time. 
+The following in an analysis of one the greatest states, Hawaii! The goal was to explore the climate data and visualize the precipitation and temperature over to assist with planning the perfect Hawaii vacation.
+
+![](Aloha.gif)
 
 ## Hawaii Climate Exploration & Analysis
 

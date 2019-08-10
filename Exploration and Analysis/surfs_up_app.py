@@ -87,6 +87,21 @@ def tobs():
 
     return jsonify(tobs_results)
 
+    @app.route("/api/v1.0/<start>")
+    def start_temp(start):
+        # get the min/avg/max
+        temp_data=session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).filter(Measurement.date >= start).all()
+
+        return jsonify(temp_data)
+
+
+
+    @app.route("/api/v1.0/<start>/<end>")
+    def range_temp(start, end):
+        # get the min/avg/max
+        temp_data=session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).filter(and_(Measurement.date >= start, Measurement.date <= end)).all()
+
+        return jsonify(temp_data)
 
     if __name__ == '__main__':
         app.run(debug=True)
