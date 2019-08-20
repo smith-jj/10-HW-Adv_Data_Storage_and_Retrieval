@@ -1,13 +1,11 @@
 import datetime as dt
-import pandas as pd
 import numpy as np
-
+import pandas as pd
 import sqlalchemy
+from flask import Flask, jsonify
+from sqlalchemy import create_engine, func, and_ 
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
-from sqlalchemy import create_engine, func
-
-from flask import Flask, jsonify
 
 #################################################
 # Database Setup
@@ -21,8 +19,8 @@ Base = automap_base()
 Base.prepare(engine, reflect=True)
 
 # Save reference to the table
-Measurement = Base.classes.measurements
-Station = Base.classes.stations
+Measurement = Base.classes.measurement
+Station = Base.classes.station
 
 #################################################
 # Flask Setup
@@ -32,7 +30,6 @@ app = Flask(__name__)
 #################################################
 # Flask Routes
 #################################################
-
 
 @app.route("/")
 def Welcome():
@@ -45,7 +42,7 @@ def Welcome():
 
 
 @app.route("/api/v1.0/precipitation")
-def names():
+def precip():
     """Return a list of Measurement Dates & Precipitation"""
     # Query Measurement data
     session = Session(engine)
@@ -63,7 +60,7 @@ def names():
 
 
 @app.route("/api/v1.0/stations")
-def names():
+def stations():
     """Return a list of all station names"""
     # Return a JSON list of stations from the dataset
     session = Session(engine)
@@ -77,29 +74,31 @@ def names():
 
 @app.route("/api/v1.0/tobs")
 def tobs():
-    # Query
+    # Query for the dates and temperature observations from a year from the last data point.
+    # Return a JSON list of Temperature Observations (tobs) for the previous year.
     session = Session(engine)
-
     end_date = session.query(Measurement.date).order_by(Measurement.date.desc()).first()[0]
-    prev_year = (dt.datetime.strptime(end_date, '%Y-%m-%d') - dt.timedelta(days=365)
-    
-    query = session.query(Measurement.tobs).filter(Measurement.date >= prev_year).all()
-    results = list(np.ravel(query))
+    prev_year = dt.datetime.strptime(end_date, '%Y-%m-%d') - dt.timedelta(days=365)
 
-    return jsonify(results)
+    tobs = session.query(Measurement.tobs).filter(Measurement.date >= prev_year).all()
+    tobs_list = list(np.ravel(tobs))
+
+    return jsonify(tobs_list)
+
 
 @app.route("/api/v1.0/<start>")
 def start_temp(start):
     # get the min/avg/max
+    session = Session(engine)
     temp_data = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).filter(Measurement.date >= start).all()
 
     return jsonify(temp_data)
 
 
-
 @app.route("/api/v1.0/<start>/<end>")
 def range_temp(start, end):
     # get the min/avg/max
+     session = Session(engine)
      temp_data = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).filter(and_(Measurement.date >= start, Measurement.date <= end)).all()
      
      return jsonify(temp_data)
